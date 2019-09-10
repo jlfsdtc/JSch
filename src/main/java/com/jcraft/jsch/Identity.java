@@ -29,10 +29,11 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.jcraft.jsch;
 
-public interface Identity{
+public interface Identity {
 
   /**
    * Decrypts this identity with the specified pass-phrase.
+   *
    * @param passphrase the pass-phrase for this identity.
    * @return <tt>true</tt> if the decryption is succeeded
    * or this identity is not cyphered.
@@ -41,37 +42,41 @@ public interface Identity{
 
   /**
    * Returns the public-key blob.
+   *
    * @return the public-key blob
    */
   public byte[] getPublicKeyBlob();
 
   /**
    * Signs on data with this identity, and returns the result.
+   *
    * @param data data to be signed
    * @return the signature
    */
   public byte[] getSignature(byte[] data);
 
   /**
-   * @deprecated The decryption should be done automatically in #setPassphase(byte[] passphrase)
    * @see #setPassphrase(byte[] passphrase)
+   * @deprecated The decryption should be done automatically in #setPassphase(byte[] passphrase)
    */
   public boolean decrypt();
 
   /**
    * Returns the name of the key algorithm.
+   *
    * @return "ssh-rsa" or "ssh-dss"
    */
   public String getAlgName();
 
   /**
-   * Returns the name of this identity. 
+   * Returns the name of this identity.
    * It will be useful to identify this object in the {@link IdentityRepository}.
    */
   public String getName();
 
   /**
    * Returns <tt>true</tt> if this identity is cyphered.
+   *
    * @return <tt>true</tt> if this identity is cyphered.
    */
   public boolean isEncrypted();

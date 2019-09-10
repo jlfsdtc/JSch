@@ -32,10 +32,10 @@ package com.jcraft.jsch;
 import java.net.*;
 import java.util.Vector;
 
-class ChannelAgentForwarding extends Channel{
+class ChannelAgentForwarding extends Channel {
 
-  static private final int LOCAL_WINDOW_SIZE_MAX=0x20000;
-  static private final int LOCAL_MAXIMUM_PACKET_SIZE=0x4000;
+  static private final int LOCAL_WINDOW_SIZE_MAX = 0x20000;
+  static private final int LOCAL_MAXIMUM_PACKET_SIZE = 0x4000;
 
   private final byte SSH_AGENTC_REQUEST_RSA_IDENTITIES = 1;
   private final byte SSH_AGENT_RSA_IDENTITIES_ANSWER = 2;
@@ -43,118 +43,114 @@ class ChannelAgentForwarding extends Channel{
   private final byte SSH_AGENT_RSA_RESPONSE = 4;
   private final byte SSH_AGENT_FAILURE = 5;
   private final byte SSH_AGENT_SUCCESS = 6;
-  private final byte SSH_AGENTC_ADD_RSA_IDENTITY	= 7;
+  private final byte SSH_AGENTC_ADD_RSA_IDENTITY = 7;
   private final byte SSH_AGENTC_REMOVE_RSA_IDENTITY = 8;
   private final byte SSH_AGENTC_REMOVE_ALL_RSA_IDENTITIES = 9;
 
-  private final byte SSH2_AGENTC_REQUEST_IDENTITIES=11;
-  private final byte SSH2_AGENT_IDENTITIES_ANSWER=12;
-  private final byte SSH2_AGENTC_SIGN_REQUEST=13;
-  private final byte SSH2_AGENT_SIGN_RESPONSE=14;
-  private final byte SSH2_AGENTC_ADD_IDENTITY=17;
-  private final byte SSH2_AGENTC_REMOVE_IDENTITY=18;
-  private final byte SSH2_AGENTC_REMOVE_ALL_IDENTITIES=19;
-  private final byte SSH2_AGENT_FAILURE=30;
+  private final byte SSH2_AGENTC_REQUEST_IDENTITIES = 11;
+  private final byte SSH2_AGENT_IDENTITIES_ANSWER = 12;
+  private final byte SSH2_AGENTC_SIGN_REQUEST = 13;
+  private final byte SSH2_AGENT_SIGN_RESPONSE = 14;
+  private final byte SSH2_AGENTC_ADD_IDENTITY = 17;
+  private final byte SSH2_AGENTC_REMOVE_IDENTITY = 18;
+  private final byte SSH2_AGENTC_REMOVE_ALL_IDENTITIES = 19;
+  private final byte SSH2_AGENT_FAILURE = 30;
 
-  boolean init=true;
+  boolean init = true;
 
-  private Buffer rbuf=null;
-  private Buffer wbuf=null;
-  private Packet packet=null;
-  private Buffer mbuf=null;
+  private Buffer rbuf = null;
+  private Buffer wbuf = null;
+  private Packet packet = null;
+  private Buffer mbuf = null;
 
-  ChannelAgentForwarding(){
+  ChannelAgentForwarding() {
     super();
 
     setLocalWindowSizeMax(LOCAL_WINDOW_SIZE_MAX);
     setLocalWindowSize(LOCAL_WINDOW_SIZE_MAX);
     setLocalPacketSize(LOCAL_MAXIMUM_PACKET_SIZE);
 
-    type=Util.str2byte("auth-agent@openssh.com");
-    rbuf=new Buffer();
+    type = Util.str2byte("auth-agent@openssh.com");
+    rbuf = new Buffer();
     rbuf.reset();
     //wbuf=new Buffer(rmpsize);
     //packet=new Packet(wbuf);
-    mbuf=new Buffer();
-    connected=true;
+    mbuf = new Buffer();
+    connected = true;
   }
 
-  public void run(){
-    try{
+  public void run() {
+    try {
       sendOpenConfirmation();
-    }
-    catch(Exception e){
-      close=true;
+    } catch (Exception e) {
+      close = true;
       disconnect();
     }
   }
 
   void write(byte[] foo, int s, int l) throws java.io.IOException {
 
-    if(packet==null){
-      wbuf=new Buffer(rmpsize);
-      packet=new Packet(wbuf);
+    if (packet == null) {
+      wbuf = new Buffer(rmpsize);
+      packet = new Packet(wbuf);
     }
 
     rbuf.shift();
-    if(rbuf.buffer.length<rbuf.index+l){
-      byte[] newbuf=new byte[rbuf.s+l];
+    if (rbuf.buffer.length < rbuf.index + l) {
+      byte[] newbuf = new byte[rbuf.s + l];
       System.arraycopy(rbuf.buffer, 0, newbuf, 0, rbuf.buffer.length);
-      rbuf.buffer=newbuf;
+      rbuf.buffer = newbuf;
     }
 
     rbuf.putByte(foo, s, l);
 
-    int mlen=rbuf.getInt();
-    if(mlen>rbuf.getLength()){
-      rbuf.s-=4;
+    int mlen = rbuf.getInt();
+    if (mlen > rbuf.getLength()) {
+      rbuf.s -= 4;
       return;
     }
 
-    int typ=rbuf.getByte();
+    int typ = rbuf.getByte();
 
-    Session _session=null;
-    try{
-      _session=getSession();
-    }
-    catch(JSchException e){
+    Session _session = null;
+    try {
+      _session = getSession();
+    } catch (JSchException e) {
       throw new java.io.IOException(e.toString());
     }
 
     IdentityRepository irepo = _session.getIdentityRepository();
-    UserInfo userinfo=_session.getUserInfo();
+    UserInfo userinfo = _session.getUserInfo();
 
     mbuf.reset();
 
-    if(typ==SSH2_AGENTC_REQUEST_IDENTITIES){ 
+    if (typ == SSH2_AGENTC_REQUEST_IDENTITIES) {
       mbuf.putByte(SSH2_AGENT_IDENTITIES_ANSWER);
       Vector identities = irepo.getIdentities();
-      synchronized(identities){
-        int count=0;
-        for(int i=0; i<identities.size(); i++){
-          Identity identity=(Identity)(identities.elementAt(i));
-          if(identity.getPublicKeyBlob()!=null)
+      synchronized (identities) {
+        int count = 0;
+        for (int i = 0; i < identities.size(); i++) {
+          Identity identity = (Identity) (identities.elementAt(i));
+          if (identity.getPublicKeyBlob() != null)
             count++;
         }
         mbuf.putInt(count);
-        for(int i=0; i<identities.size(); i++){
-          Identity identity=(Identity)(identities.elementAt(i));
-          byte[] pubkeyblob=identity.getPublicKeyBlob();
-          if(pubkeyblob==null)
+        for (int i = 0; i < identities.size(); i++) {
+          Identity identity = (Identity) (identities.elementAt(i));
+          byte[] pubkeyblob = identity.getPublicKeyBlob();
+          if (pubkeyblob == null)
             continue;
           mbuf.putString(pubkeyblob);
           mbuf.putString(Util.empty);
         }
       }
-    }
-    else if(typ==SSH_AGENTC_REQUEST_RSA_IDENTITIES) {
+    } else if (typ == SSH_AGENTC_REQUEST_RSA_IDENTITIES) {
       mbuf.putByte(SSH_AGENT_RSA_IDENTITIES_ANSWER);
       mbuf.putInt(0);
-    }
-    else if(typ==SSH2_AGENTC_SIGN_REQUEST){
-      byte[] blob=rbuf.getString();
-      byte[] data=rbuf.getString();
-      int flags=rbuf.getInt();
+    } else if (typ == SSH2_AGENTC_SIGN_REQUEST) {
+      byte[] blob = rbuf.getString();
+      byte[] data = rbuf.getString();
+      int flags = rbuf.getInt();
 
 //      if((flags & 1)!=0){ //SSH_AGENT_OLD_SIGNATURE // old OpenSSH 2.0, 2.1
 //        datafellows = SSH_BUG_SIGBLOB;
@@ -162,81 +158,74 @@ class ChannelAgentForwarding extends Channel{
 
       Vector identities = irepo.getIdentities();
       Identity identity = null;
-      synchronized(identities){
-        for(int i=0; i<identities.size(); i++){
-          Identity _identity=(Identity)(identities.elementAt(i));
-          if(_identity.getPublicKeyBlob()==null)
+      synchronized (identities) {
+        for (int i = 0; i < identities.size(); i++) {
+          Identity _identity = (Identity) (identities.elementAt(i));
+          if (_identity.getPublicKeyBlob() == null)
             continue;
-          if(!Util.array_equals(blob, _identity.getPublicKeyBlob())){
+          if (!Util.array_equals(blob, _identity.getPublicKeyBlob())) {
             continue;
           }
-          if(_identity.isEncrypted()){
-            if(userinfo==null)
+          if (_identity.isEncrypted()) {
+            if (userinfo == null)
               continue;
-            while(_identity.isEncrypted()){
-              if(!userinfo.promptPassphrase("Passphrase for "+_identity.getName())){
+            while (_identity.isEncrypted()) {
+              if (!userinfo.promptPassphrase("Passphrase for " + _identity.getName())) {
                 break;
               }
 
-              String _passphrase=userinfo.getPassphrase();
-              if(_passphrase==null){
+              String _passphrase = userinfo.getPassphrase();
+              if (_passphrase == null) {
                 break;
               }
 
-              byte[] passphrase=Util.str2byte(_passphrase);
-              try{
-                if(_identity.setPassphrase(passphrase)){
+              byte[] passphrase = Util.str2byte(_passphrase);
+              try {
+                if (_identity.setPassphrase(passphrase)) {
                   break;
                 }
-              }
-              catch(JSchException e){
+              } catch (JSchException e) {
                 break;
               }
             }
           }
 
-          if(!_identity.isEncrypted()){
-            identity=_identity;
+          if (!_identity.isEncrypted()) {
+            identity = _identity;
             break;
           }
         }
       }
 
-      byte[] signature=null;
+      byte[] signature = null;
 
-      if(identity!=null){
-        signature=identity.getSignature(data);
+      if (identity != null) {
+        signature = identity.getSignature(data);
       }
 
-      if(signature==null){
+      if (signature == null) {
         mbuf.putByte(SSH2_AGENT_FAILURE);
-      }
-      else{
+      } else {
         mbuf.putByte(SSH2_AGENT_SIGN_RESPONSE);
         mbuf.putString(signature);
       }
-    }
-    else if(typ==SSH2_AGENTC_REMOVE_IDENTITY){
-      byte[] blob=rbuf.getString();
+    } else if (typ == SSH2_AGENTC_REMOVE_IDENTITY) {
+      byte[] blob = rbuf.getString();
       irepo.remove(blob);
       mbuf.putByte(SSH_AGENT_SUCCESS);
-    }
-    else if(typ==SSH_AGENTC_REMOVE_ALL_RSA_IDENTITIES){
+    } else if (typ == SSH_AGENTC_REMOVE_ALL_RSA_IDENTITIES) {
       mbuf.putByte(SSH_AGENT_SUCCESS);
-    }
-    else if(typ==SSH2_AGENTC_REMOVE_ALL_IDENTITIES){
+    } else if (typ == SSH2_AGENTC_REMOVE_ALL_IDENTITIES) {
       irepo.removeAll();
       mbuf.putByte(SSH_AGENT_SUCCESS);
-    }
-    else if(typ==SSH2_AGENTC_ADD_IDENTITY){
+    } else if (typ == SSH2_AGENTC_ADD_IDENTITY) {
       int fooo = rbuf.getLength();
       byte[] tmp = new byte[fooo];
       rbuf.getByte(tmp);
       boolean result = irepo.add(tmp);
       mbuf.putByte(result ? SSH_AGENT_SUCCESS : SSH_AGENT_FAILURE);
-    }
-    else {
-      rbuf.skip(rbuf.getLength()-1);
+    } else {
+      rbuf.skip(rbuf.getLength() - 1);
       mbuf.putByte(SSH_AGENT_FAILURE);
     }
 
@@ -245,21 +234,20 @@ class ChannelAgentForwarding extends Channel{
     send(response);
   }
 
-  private void send(byte[] message){
+  private void send(byte[] message) {
     packet.reset();
-    wbuf.putByte((byte)Session.SSH_MSG_CHANNEL_DATA);
+    wbuf.putByte((byte) Session.SSH_MSG_CHANNEL_DATA);
     wbuf.putInt(recipient);
-    wbuf.putInt(4+message.length);
+    wbuf.putInt(4 + message.length);
     wbuf.putString(message);
 
-    try{
-      getSession().write(packet, this, 4+message.length);
-    }
-    catch(Exception e){
+    try {
+      getSession().write(packet, this, 4 + message.length);
+    } catch (Exception e) {
     }
   }
 
-  void eof_remote(){
+  void eof_remote() {
     super.eof_remote();
     eof();
   }

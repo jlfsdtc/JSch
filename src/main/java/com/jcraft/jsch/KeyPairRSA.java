@@ -31,7 +31,7 @@ package com.jcraft.jsch;
 
 import java.math.BigInteger;
 
-public class KeyPairRSA extends KeyPair{
+public class KeyPairRSA extends KeyPair {
   private byte[] n_array;   // modulus   p multiply q
   private byte[] pub_array; // e         
   private byte[] prv_array; // d         e^-1 mod (p-1)(q-1)
@@ -42,94 +42,98 @@ public class KeyPairRSA extends KeyPair{
   private byte[] eq_array; // prime exponent q  dmq1 == prv mod (q-1)
   private byte[] c_array;  // coefficient  iqmp == modinv(q, p) == q^-1 mod p
 
-  private int key_size=1024;
+  private int key_size = 1024;
 
-  public KeyPairRSA(JSch jsch){
+  public KeyPairRSA(JSch jsch) {
     this(jsch, null, null, null);
   }
 
   public KeyPairRSA(JSch jsch,
                     byte[] n_array,
                     byte[] pub_array,
-                    byte[] prv_array){
+                    byte[] prv_array) {
     super(jsch);
     this.n_array = n_array;
     this.pub_array = pub_array;
     this.prv_array = prv_array;
-    if(n_array!=null){
+    if (n_array != null) {
       key_size = (new java.math.BigInteger(n_array)).bitLength();
     }
   }
 
-  void generate(int key_size) throws JSchException{
-    this.key_size=key_size;
-    try{
-      Class c=Class.forName(jsch.getConfig("keypairgen.rsa"));
-      KeyPairGenRSA keypairgen=(KeyPairGenRSA)(c.newInstance());
+  void generate(int key_size) throws JSchException {
+    this.key_size = key_size;
+    try {
+      Class c = Class.forName(jsch.getConfig("keypairgen.rsa"));
+      KeyPairGenRSA keypairgen = (KeyPairGenRSA) (c.newInstance());
       keypairgen.init(key_size);
-      pub_array=keypairgen.getE();
-      prv_array=keypairgen.getD();
-      n_array=keypairgen.getN();
+      pub_array = keypairgen.getE();
+      prv_array = keypairgen.getD();
+      n_array = keypairgen.getN();
 
-      p_array=keypairgen.getP();
-      q_array=keypairgen.getQ();
-      ep_array=keypairgen.getEP();
-      eq_array=keypairgen.getEQ();
-      c_array=keypairgen.getC();
+      p_array = keypairgen.getP();
+      q_array = keypairgen.getQ();
+      ep_array = keypairgen.getEP();
+      eq_array = keypairgen.getEQ();
+      c_array = keypairgen.getC();
 
-      keypairgen=null;
-    }
-    catch(Exception e){
+      keypairgen = null;
+    } catch (Exception e) {
       //System.err.println("KeyPairRSA: "+e); 
-      if(e instanceof Throwable)
-        throw new JSchException(e.toString(), (Throwable)e);
+      if (e instanceof Throwable)
+        throw new JSchException(e.toString(), (Throwable) e);
       throw new JSchException(e.toString());
     }
   }
 
-  private static final byte[] begin=Util.str2byte("-----BEGIN RSA PRIVATE KEY-----");
-  private static final byte[] end=Util.str2byte("-----END RSA PRIVATE KEY-----");
+  private static final byte[] begin = Util.str2byte("-----BEGIN RSA PRIVATE KEY-----");
+  private static final byte[] end = Util.str2byte("-----END RSA PRIVATE KEY-----");
 
-  byte[] getBegin(){ return begin; }
-  byte[] getEnd(){ return end; }
+  byte[] getBegin() {
+    return begin;
+  }
 
-  byte[] getPrivateKey(){
-    int content=
-      1+countLength(1) + 1 +                           // INTEGER
-      1+countLength(n_array.length) + n_array.length + // INTEGER  N
-      1+countLength(pub_array.length) + pub_array.length + // INTEGER  pub
-      1+countLength(prv_array.length) + prv_array.length+  // INTEGER  prv
-      1+countLength(p_array.length) + p_array.length+      // INTEGER  p
-      1+countLength(q_array.length) + q_array.length+      // INTEGER  q
-      1+countLength(ep_array.length) + ep_array.length+    // INTEGER  ep
-      1+countLength(eq_array.length) + eq_array.length+    // INTEGER  eq
-      1+countLength(c_array.length) + c_array.length;      // INTEGER  c
+  byte[] getEnd() {
+    return end;
+  }
 
-    int total=
-      1+countLength(content)+content;   // SEQUENCE
+  byte[] getPrivateKey() {
+    int content =
+        1 + countLength(1) + 1 +                           // INTEGER
+            1 + countLength(n_array.length) + n_array.length + // INTEGER  N
+            1 + countLength(pub_array.length) + pub_array.length + // INTEGER  pub
+            1 + countLength(prv_array.length) + prv_array.length +  // INTEGER  prv
+            1 + countLength(p_array.length) + p_array.length +      // INTEGER  p
+            1 + countLength(q_array.length) + q_array.length +      // INTEGER  q
+            1 + countLength(ep_array.length) + ep_array.length +    // INTEGER  ep
+            1 + countLength(eq_array.length) + eq_array.length +    // INTEGER  eq
+            1 + countLength(c_array.length) + c_array.length;      // INTEGER  c
 
-    byte[] plain=new byte[total];
-    int index=0;
-    index=writeSEQUENCE(plain, index, content);
-    index=writeINTEGER(plain, index, new byte[1]);  // 0
-    index=writeINTEGER(plain, index, n_array);
-    index=writeINTEGER(plain, index, pub_array);
-    index=writeINTEGER(plain, index, prv_array);
-    index=writeINTEGER(plain, index, p_array);
-    index=writeINTEGER(plain, index, q_array);
-    index=writeINTEGER(plain, index, ep_array);
-    index=writeINTEGER(plain, index, eq_array);
-    index=writeINTEGER(plain, index, c_array);
+    int total =
+        1 + countLength(content) + content;   // SEQUENCE
+
+    byte[] plain = new byte[total];
+    int index = 0;
+    index = writeSEQUENCE(plain, index, content);
+    index = writeINTEGER(plain, index, new byte[1]);  // 0
+    index = writeINTEGER(plain, index, n_array);
+    index = writeINTEGER(plain, index, pub_array);
+    index = writeINTEGER(plain, index, prv_array);
+    index = writeINTEGER(plain, index, p_array);
+    index = writeINTEGER(plain, index, q_array);
+    index = writeINTEGER(plain, index, ep_array);
+    index = writeINTEGER(plain, index, eq_array);
+    index = writeINTEGER(plain, index, c_array);
     return plain;
   }
 
-  boolean parse(byte [] plain){
+  boolean parse(byte[] plain) {
 
-    try{
-      int index=0;
-      int length=0;
+    try {
+      int index = 0;
+      int length = 0;
 
-      if(vendor==VENDOR_PUTTY){
+      if (vendor == VENDOR_PUTTY) {
         Buffer buf = new Buffer(plain);
         buf.skip(plain.length);
 
@@ -139,8 +143,7 @@ public class KeyPairRSA extends KeyPair{
           p_array = tmp[1];
           q_array = tmp[2];
           c_array = tmp[3];
-        }
-        catch(JSchException e){
+        } catch (JSchException e) {
           return false;
         }
 
@@ -150,16 +153,16 @@ public class KeyPairRSA extends KeyPair{
         return true;
       }
 
-      if(vendor==VENDOR_FSECURE){
-	if(plain[index]!=0x30){                  // FSecure
-	  Buffer buf=new Buffer(plain);
-	  pub_array=buf.getMPIntBits();
-	  prv_array=buf.getMPIntBits();
-	  n_array=buf.getMPIntBits();
-	  byte[] u_array=buf.getMPIntBits();
-	  p_array=buf.getMPIntBits();
-	  q_array=buf.getMPIntBits();
-          if(n_array!=null){
+      if (vendor == VENDOR_FSECURE) {
+        if (plain[index] != 0x30) {                  // FSecure
+          Buffer buf = new Buffer(plain);
+          pub_array = buf.getMPIntBits();
+          prv_array = buf.getMPIntBits();
+          n_array = buf.getMPIntBits();
+          byte[] u_array = buf.getMPIntBits();
+          p_array = buf.getMPIntBits();
+          q_array = buf.getMPIntBits();
+          if (n_array != null) {
             key_size = (new java.math.BigInteger(n_array)).bitLength();
           }
 
@@ -167,9 +170,9 @@ public class KeyPairRSA extends KeyPair{
           getEQArray();
           getCArray();
 
-	  return true;
-	}
-	return false;
+          return true;
+        }
+        return false;
       }
 
       /*
@@ -189,118 +192,147 @@ public class KeyPairRSA extends KeyPair{
       */
 
       index++; // SEQUENCE
-      length=plain[index++]&0xff;
-      if((length&0x80)!=0){
-        int foo=length&0x7f; length=0;
-        while(foo-->0){ length=(length<<8)+(plain[index++]&0xff); }
+      length = plain[index++] & 0xff;
+      if ((length & 0x80) != 0) {
+        int foo = length & 0x7f;
+        length = 0;
+        while (foo-- > 0) {
+          length = (length << 8) + (plain[index++] & 0xff);
+        }
       }
 
-      if(plain[index]!=0x02)return false;
+      if (plain[index] != 0x02) return false;
       index++; // INTEGER
-      length=plain[index++]&0xff;
-      if((length&0x80)!=0){
-        int foo=length&0x7f; length=0;
-        while(foo-->0){ length=(length<<8)+(plain[index++]&0xff); }
+      length = plain[index++] & 0xff;
+      if ((length & 0x80) != 0) {
+        int foo = length & 0x7f;
+        length = 0;
+        while (foo-- > 0) {
+          length = (length << 8) + (plain[index++] & 0xff);
+        }
       }
-      index+=length;
+      index += length;
 
       index++;
-      length=plain[index++]&0xff;
-      if((length&0x80)!=0){
-        int foo=length&0x7f; length=0;
-        while(foo-->0){ length=(length<<8)+(plain[index++]&0xff); }
+      length = plain[index++] & 0xff;
+      if ((length & 0x80) != 0) {
+        int foo = length & 0x7f;
+        length = 0;
+        while (foo-- > 0) {
+          length = (length << 8) + (plain[index++] & 0xff);
+        }
       }
-      n_array=new byte[length];
+      n_array = new byte[length];
       System.arraycopy(plain, index, n_array, 0, length);
-      index+=length;
+      index += length;
 
       index++;
-      length=plain[index++]&0xff;
-      if((length&0x80)!=0){
-        int foo=length&0x7f; length=0;
-        while(foo-->0){ length=(length<<8)+(plain[index++]&0xff); }
+      length = plain[index++] & 0xff;
+      if ((length & 0x80) != 0) {
+        int foo = length & 0x7f;
+        length = 0;
+        while (foo-- > 0) {
+          length = (length << 8) + (plain[index++] & 0xff);
+        }
       }
-      pub_array=new byte[length];
+      pub_array = new byte[length];
       System.arraycopy(plain, index, pub_array, 0, length);
-      index+=length;
+      index += length;
 
       index++;
-      length=plain[index++]&0xff;
-      if((length&0x80)!=0){
-        int foo=length&0x7f; length=0;
-        while(foo-->0){ length=(length<<8)+(plain[index++]&0xff); }
+      length = plain[index++] & 0xff;
+      if ((length & 0x80) != 0) {
+        int foo = length & 0x7f;
+        length = 0;
+        while (foo-- > 0) {
+          length = (length << 8) + (plain[index++] & 0xff);
+        }
       }
-      prv_array=new byte[length];
+      prv_array = new byte[length];
       System.arraycopy(plain, index, prv_array, 0, length);
-      index+=length;
+      index += length;
 
       index++;
-      length=plain[index++]&0xff;
-      if((length&0x80)!=0){
-        int foo=length&0x7f; length=0;
-        while(foo-->0){ length=(length<<8)+(plain[index++]&0xff); }
+      length = plain[index++] & 0xff;
+      if ((length & 0x80) != 0) {
+        int foo = length & 0x7f;
+        length = 0;
+        while (foo-- > 0) {
+          length = (length << 8) + (plain[index++] & 0xff);
+        }
       }
-      p_array=new byte[length];
+      p_array = new byte[length];
       System.arraycopy(plain, index, p_array, 0, length);
-      index+=length;
+      index += length;
 
       index++;
-      length=plain[index++]&0xff;
-      if((length&0x80)!=0){
-        int foo=length&0x7f; length=0;
-        while(foo-->0){ length=(length<<8)+(plain[index++]&0xff); }
+      length = plain[index++] & 0xff;
+      if ((length & 0x80) != 0) {
+        int foo = length & 0x7f;
+        length = 0;
+        while (foo-- > 0) {
+          length = (length << 8) + (plain[index++] & 0xff);
+        }
       }
-      q_array=new byte[length];
+      q_array = new byte[length];
       System.arraycopy(plain, index, q_array, 0, length);
-      index+=length;
+      index += length;
 
       index++;
-      length=plain[index++]&0xff;
-      if((length&0x80)!=0){
-        int foo=length&0x7f; length=0;
-        while(foo-->0){ length=(length<<8)+(plain[index++]&0xff); }
+      length = plain[index++] & 0xff;
+      if ((length & 0x80) != 0) {
+        int foo = length & 0x7f;
+        length = 0;
+        while (foo-- > 0) {
+          length = (length << 8) + (plain[index++] & 0xff);
+        }
       }
-      ep_array=new byte[length];
+      ep_array = new byte[length];
       System.arraycopy(plain, index, ep_array, 0, length);
-      index+=length;
+      index += length;
 
       index++;
-      length=plain[index++]&0xff;
-      if((length&0x80)!=0){
-        int foo=length&0x7f; length=0;
-        while(foo-->0){ length=(length<<8)+(plain[index++]&0xff); }
+      length = plain[index++] & 0xff;
+      if ((length & 0x80) != 0) {
+        int foo = length & 0x7f;
+        length = 0;
+        while (foo-- > 0) {
+          length = (length << 8) + (plain[index++] & 0xff);
+        }
       }
-      eq_array=new byte[length];
+      eq_array = new byte[length];
       System.arraycopy(plain, index, eq_array, 0, length);
-      index+=length;
+      index += length;
 
       index++;
-      length=plain[index++]&0xff;
-      if((length&0x80)!=0){
-        int foo=length&0x7f; length=0;
-        while(foo-->0){ length=(length<<8)+(plain[index++]&0xff); }
+      length = plain[index++] & 0xff;
+      if ((length & 0x80) != 0) {
+        int foo = length & 0x7f;
+        length = 0;
+        while (foo-- > 0) {
+          length = (length << 8) + (plain[index++] & 0xff);
+        }
       }
-      c_array=new byte[length];
+      c_array = new byte[length];
       System.arraycopy(plain, index, c_array, 0, length);
-      index+=length;
+      index += length;
 
-      if(n_array!=null){
+      if (n_array != null) {
         key_size = (new java.math.BigInteger(n_array)).bitLength();
       }
 
-    }
-    catch(Exception e){
+    } catch (Exception e) {
       //System.err.println(e);
       return false;
     }
     return true;
   }
 
-  public byte[] getPublicKeyBlob(){
-    byte[] foo=super.getPublicKeyBlob();
-    if(foo!=null) return foo;
+  public byte[] getPublicKeyBlob() {
+    byte[] foo = super.getPublicKeyBlob();
+    if (foo != null) return foo;
 
-    if(pub_array==null) return null;
+    if (pub_array == null) return null;
     byte[][] tmp = new byte[3][];
     tmp[0] = sshrsa;
     tmp[1] = pub_array;
@@ -308,18 +340,24 @@ public class KeyPairRSA extends KeyPair{
     return Buffer.fromBytes(tmp).buffer;
   }
 
-  private static final byte[] sshrsa=Util.str2byte("ssh-rsa");
-  byte[] getKeyTypeName(){return sshrsa;}
-  public int getKeyType(){return RSA;}
+  private static final byte[] sshrsa = Util.str2byte("ssh-rsa");
 
-  public int getKeySize(){
+  byte[] getKeyTypeName() {
+    return sshrsa;
+  }
+
+  public int getKeyType() {
+    return RSA;
+  }
+
+  public int getKeySize() {
     return key_size;
   }
 
-  public byte[] getSignature(byte[] data){
-    try{      
-      Class c=Class.forName((String)jsch.getConfig("signature.rsa"));
-      SignatureRSA rsa=(SignatureRSA)(c.newInstance());
+  public byte[] getSignature(byte[] data) {
+    try {
+      Class c = Class.forName((String) jsch.getConfig("signature.rsa"));
+      SignatureRSA rsa = (SignatureRSA) (c.newInstance());
       rsa.init();
       rsa.setPrvKey(prv_array, n_array);
 
@@ -329,29 +367,27 @@ public class KeyPairRSA extends KeyPair{
       tmp[0] = sshrsa;
       tmp[1] = sig;
       return Buffer.fromBytes(tmp).buffer;
-    }
-    catch(Exception e){
+    } catch (Exception e) {
     }
     return null;
   }
 
-  public Signature getVerifier(){
-    try{      
-      Class c=Class.forName((String)jsch.getConfig("signature.rsa"));
-      SignatureRSA rsa=(SignatureRSA)(c.newInstance());
+  public Signature getVerifier() {
+    try {
+      Class c = Class.forName((String) jsch.getConfig("signature.rsa"));
+      SignatureRSA rsa = (SignatureRSA) (c.newInstance());
       rsa.init();
 
-      if(pub_array == null && n_array == null && getPublicKeyBlob()!=null){
+      if (pub_array == null && n_array == null && getPublicKeyBlob() != null) {
         Buffer buf = new Buffer(getPublicKeyBlob());
         buf.getString();
         pub_array = buf.getString();
         n_array = buf.getString();
-      } 
+      }
 
       rsa.setPubKey(pub_array, n_array);
       return rsa;
-    }
-    catch(Exception e){
+    } catch (Exception e) {
     }
     return null;
   }
@@ -368,12 +404,12 @@ public class KeyPairRSA extends KeyPair{
     kpair.p_array = tmp[5];
     kpair.q_array = tmp[6];
     kpair.publicKeyComment = new String(tmp[7]);
-    kpair.vendor=VENDOR_OPENSSH;
+    kpair.vendor = VENDOR_OPENSSH;
     return kpair;
   }
 
   public byte[] forSSHAgent() throws JSchException {
-    if(isEncrypted()){
+    if (isEncrypted()) {
       throw new JSchException("key is encrypted.");
     }
     Buffer buf = new Buffer();
@@ -390,28 +426,28 @@ public class KeyPairRSA extends KeyPair{
     return result;
   }
 
-  private byte[] getEPArray(){
-    if(ep_array==null){
-      ep_array=(new BigInteger(prv_array)).mod(new BigInteger(p_array).subtract(BigInteger.ONE)).toByteArray();
+  private byte[] getEPArray() {
+    if (ep_array == null) {
+      ep_array = (new BigInteger(prv_array)).mod(new BigInteger(p_array).subtract(BigInteger.ONE)).toByteArray();
     }
     return ep_array;
-  } 
+  }
 
-  private byte[] getEQArray(){
-    if(eq_array==null){
-      eq_array=(new BigInteger(prv_array)).mod(new BigInteger(q_array).subtract(BigInteger.ONE)).toByteArray();
+  private byte[] getEQArray() {
+    if (eq_array == null) {
+      eq_array = (new BigInteger(prv_array)).mod(new BigInteger(q_array).subtract(BigInteger.ONE)).toByteArray();
     }
     return eq_array;
-  } 
+  }
 
-  private byte[] getCArray(){
-    if(c_array==null){
-      c_array=(new BigInteger(q_array)).modInverse(new BigInteger(p_array)).toByteArray();
+  private byte[] getCArray() {
+    if (c_array == null) {
+      c_array = (new BigInteger(q_array)).modInverse(new BigInteger(p_array)).toByteArray();
     }
     return c_array;
-  } 
+  }
 
-  public void dispose(){
+  public void dispose() {
     super.dispose();
     Util.bzero(prv_array);
   }

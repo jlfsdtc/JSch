@@ -29,14 +29,14 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.jcraft.jsch;
 
-class RequestAgentForwarding extends Request{
-  public void request(Session session, Channel channel) throws Exception{
+class RequestAgentForwarding extends Request {
+  public void request(Session session, Channel channel) throws Exception {
     super.request(session, channel);
 
     setReply(false);
 
-    Buffer buf=new Buffer();
-    Packet packet=new Packet(buf);
+    Buffer buf = new Buffer();
+    Packet packet = new Packet(buf);
 
     // byte      SSH_MSG_CHANNEL_REQUEST(98)
     // uint32 recipient channel
@@ -46,8 +46,8 @@ class RequestAgentForwarding extends Request{
     buf.putByte((byte) Session.SSH_MSG_CHANNEL_REQUEST);
     buf.putInt(channel.getRecipient());
     buf.putString(Util.str2byte("auth-agent-req@openssh.com"));
-    buf.putByte((byte)(waitForReply() ? 1 : 0));
+    buf.putByte((byte) (waitForReply() ? 1 : 0));
     write(packet);
-    session.agent_forwarding=true;
+    session.agent_forwarding = true;
   }
 }

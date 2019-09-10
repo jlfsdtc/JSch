@@ -38,8 +38,8 @@ package com.jcraft.jsch;
 import java.io.*;
 import java.net.*;
 
-public class ProxySOCKS5 implements Proxy{
-  private static int DEFAULTPORT=1080;
+public class ProxySOCKS5 implements Proxy {
+  private static int DEFAULTPORT = 1080;
   private String proxy_host;
   private int proxy_port;
   private InputStream in;
@@ -48,48 +48,49 @@ public class ProxySOCKS5 implements Proxy{
   private String user;
   private String passwd;
 
-  public ProxySOCKS5(String proxy_host){
-    int port=DEFAULTPORT;
-    String host=proxy_host;
-    if(proxy_host.indexOf(':')!=-1){
-      try{
-	host=proxy_host.substring(0, proxy_host.indexOf(':'));
-	port=Integer.parseInt(proxy_host.substring(proxy_host.indexOf(':')+1));
-      }
-      catch(Exception e){
+  public ProxySOCKS5(String proxy_host) {
+    int port = DEFAULTPORT;
+    String host = proxy_host;
+    if (proxy_host.indexOf(':') != -1) {
+      try {
+        host = proxy_host.substring(0, proxy_host.indexOf(':'));
+        port = Integer.parseInt(proxy_host.substring(proxy_host.indexOf(':') + 1));
+      } catch (Exception e) {
       }
     }
-    this.proxy_host=host;
-    this.proxy_port=port;
+    this.proxy_host = host;
+    this.proxy_port = port;
   }
-  public ProxySOCKS5(String proxy_host, int proxy_port){
-    this.proxy_host=proxy_host;
-    this.proxy_port=proxy_port;
+
+  public ProxySOCKS5(String proxy_host, int proxy_port) {
+    this.proxy_host = proxy_host;
+    this.proxy_port = proxy_port;
   }
-  public void setUserPasswd(String user, String passwd){
-    this.user=user;
-    this.passwd=passwd;
+
+  public void setUserPasswd(String user, String passwd) {
+    this.user = user;
+    this.passwd = passwd;
   }
-  public void connect(SocketFactory socket_factory, String host, int port, int timeout) throws JSchException{
-    try{
-      if(socket_factory==null){
-        socket=Util.createSocket(proxy_host, proxy_port, timeout);
+
+  public void connect(SocketFactory socket_factory, String host, int port, int timeout) throws JSchException {
+    try {
+      if (socket_factory == null) {
+        socket = Util.createSocket(proxy_host, proxy_port, timeout);
         //socket=new Socket(proxy_host, proxy_port);    
-        in=socket.getInputStream();
-        out=socket.getOutputStream();
+        in = socket.getInputStream();
+        out = socket.getOutputStream();
+      } else {
+        socket = socket_factory.createSocket(proxy_host, proxy_port);
+        in = socket_factory.getInputStream(socket);
+        out = socket_factory.getOutputStream(socket);
       }
-      else{
-        socket=socket_factory.createSocket(proxy_host, proxy_port);
-        in=socket_factory.getInputStream(socket);
-        out=socket_factory.getOutputStream(socket);
-      }
-      if(timeout>0){
+      if (timeout > 0) {
         socket.setSoTimeout(timeout);
       }
       socket.setTcpNoDelay(true);
 
-      byte[] buf=new byte[1024];
-      int index=0;
+      byte[] buf = new byte[1024];
+      int index = 0;
 
 /*
                    +----+----------+----------+
@@ -112,11 +113,11 @@ public class ProxySOCKS5 implements Proxy{
           o  X'FF' NO ACCEPTABLE METHODS
 */
 
-      buf[index++]=5;
+      buf[index++] = 5;
 
-      buf[index++]=2;
-      buf[index++]=0;           // NO AUTHENTICATION REQUIRED
-      buf[index++]=2;           // USERNAME/PASSWORD
+      buf[index++] = 2;
+      buf[index++] = 0;           // NO AUTHENTICATION REQUIRED
+      buf[index++] = 2;           // USERNAME/PASSWORD
 
       out.write(buf, 0, index);
 
@@ -132,14 +133,14 @@ public class ProxySOCKS5 implements Proxy{
 */
       //in.read(buf, 0, 2);
       fill(in, buf, 2);
- 
-      boolean check=false;
-      switch((buf[1])&0xff){
+
+      boolean check = false;
+      switch ((buf[1]) & 0xff) {
         case 0:                // NO AUTHENTICATION REQUIRED
-          check=true;
+          check = true;
           break;
         case 2:                // USERNAME/PASSWORD
-          if(user==null || passwd==null)break;
+          if (user == null || passwd == null) break;
 
 /*
    Once the SOCKS V5 server has started, and the client has selected the
@@ -160,14 +161,14 @@ public class ProxySOCKS5 implements Proxy{
    PASSWD field that follows. The PASSWD field contains the password
    association with the given UNAME.
 */
-          index=0;
-          buf[index++]=1;
-          buf[index++]=(byte)(user.length());
-	  System.arraycopy(Util.str2byte(user), 0, buf, index, user.length());
-	  index+=user.length();
-          buf[index++]=(byte)(passwd.length());
-	  System.arraycopy(Util.str2byte(passwd), 0, buf, index, passwd.length());
-	  index+=passwd.length();
+          index = 0;
+          buf[index++] = 1;
+          buf[index++] = (byte) (user.length());
+          System.arraycopy(Util.str2byte(user), 0, buf, index, user.length());
+          index += user.length();
+          buf[index++] = (byte) (passwd.length());
+          System.arraycopy(Util.str2byte(passwd), 0, buf, index, passwd.length());
+          index += passwd.length();
 
           out.write(buf, 0, index);
 
@@ -187,16 +188,17 @@ public class ProxySOCKS5 implements Proxy{
 */
           //in.read(buf, 0, 2);
           fill(in, buf, 2);
-          if(buf[1]==0)
-            check=true;
+          if (buf[1] == 0)
+            check = true;
           break;
         default:
       }
 
-      if(!check){
-        try{ socket.close(); }
-	catch(Exception eee){
-	}
+      if (!check) {
+        try {
+          socket.close();
+        } catch (Exception eee) {
+        }
         throw new JSchException("fail in SOCKS5 proxy");
       }
 
@@ -225,20 +227,20 @@ public class ProxySOCKS5 implements Proxy{
       o  DST.PORT desired destination port in network octet
          order
 */
-     
-      index=0;
-      buf[index++]=5;
-      buf[index++]=1;       // CONNECT
-      buf[index++]=0;
 
-      byte[] hostb=Util.str2byte(host);
-      int len=hostb.length;
-      buf[index++]=3;      // DOMAINNAME
-      buf[index++]=(byte)(len);
+      index = 0;
+      buf[index++] = 5;
+      buf[index++] = 1;       // CONNECT
+      buf[index++] = 0;
+
+      byte[] hostb = Util.str2byte(host);
+      int len = hostb.length;
+      buf[index++] = 3;      // DOMAINNAME
+      buf[index++] = (byte) (len);
       System.arraycopy(hostb, 0, buf, index, len);
-      index+=len;
-      buf[index++]=(byte)(port>>>8);
-      buf[index++]=(byte)(port&0xff);
+      index += len;
+      buf[index++] = (byte) (port >>> 8);
+      buf[index++] = (byte) (port & 0xff);
 
       out.write(buf, 0, index);
 
@@ -280,70 +282,81 @@ public class ProxySOCKS5 implements Proxy{
       //in.read(buf, 0, 4);
       fill(in, buf, 4);
 
-      if(buf[1]!=0){
-        try{ socket.close(); }
-	catch(Exception eee){
-	}
-        throw new JSchException("ProxySOCKS5: server returns "+buf[1]);
+      if (buf[1] != 0) {
+        try {
+          socket.close();
+        } catch (Exception eee) {
+        }
+        throw new JSchException("ProxySOCKS5: server returns " + buf[1]);
       }
 
-      switch(buf[3]&0xff){
+      switch (buf[3] & 0xff) {
         case 1:
           //in.read(buf, 0, 6);
           fill(in, buf, 6);
-	  break;
+          break;
         case 3:
           //in.read(buf, 0, 1);
           fill(in, buf, 1);
           //in.read(buf, 0, buf[0]+2);
-          fill(in, buf, (buf[0]&0xff)+2);
-	  break;
+          fill(in, buf, (buf[0] & 0xff) + 2);
+          break;
         case 4:
           //in.read(buf, 0, 18);
           fill(in, buf, 18);
           break;
         default:
       }
-    }
-    catch(RuntimeException e){
+    } catch (RuntimeException e) {
       throw e;
-    }
-    catch(Exception e){
-      try{ if(socket!=null)socket.close(); }
-      catch(Exception eee){
+    } catch (Exception e) {
+      try {
+        if (socket != null) socket.close();
+      } catch (Exception eee) {
       }
-      String message="ProxySOCKS5: "+e.toString();
-      if(e instanceof Throwable)
-        throw new JSchException(message, (Throwable)e);
+      String message = "ProxySOCKS5: " + e.toString();
+      if (e instanceof Throwable)
+        throw new JSchException(message, (Throwable) e);
       throw new JSchException(message);
     }
   }
-  public InputStream getInputStream(){ return in; }
-  public OutputStream getOutputStream(){ return out; }
-  public Socket getSocket(){ return socket; }
-  public void close(){
-    try{
-      if(in!=null)in.close();
-      if(out!=null)out.close();
-      if(socket!=null)socket.close();
-    }
-    catch(Exception e){
-    }
-    in=null;
-    out=null;
-    socket=null;
+
+  public InputStream getInputStream() {
+    return in;
   }
-  public static int getDefaultPort(){
+
+  public OutputStream getOutputStream() {
+    return out;
+  }
+
+  public Socket getSocket() {
+    return socket;
+  }
+
+  public void close() {
+    try {
+      if (in != null) in.close();
+      if (out != null) out.close();
+      if (socket != null) socket.close();
+    } catch (Exception e) {
+    }
+    in = null;
+    out = null;
+    socket = null;
+  }
+
+  public static int getDefaultPort() {
     return DEFAULTPORT;
   }
-  private void fill(InputStream in, byte[] buf, int len) throws JSchException, IOException{
-    int s=0;
-    while(s<len){
-      int i=in.read(buf, s, len-s);
-      if(i<=0){
+
+  private void fill(InputStream in, byte[] buf, int len) throws JSchException, IOException {
+    int s = 0;
+    while (s < len) {
+      int i = in.read(buf, s, len - s);
+      if (i <= 0) {
         throw new JSchException("ProxySOCKS5: stream is closed");
       }
-      s+=i;
+      s += i;
     }
   }
 }

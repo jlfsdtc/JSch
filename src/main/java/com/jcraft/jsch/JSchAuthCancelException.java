@@ -29,17 +29,20 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.jcraft.jsch;
 
-class JSchAuthCancelException extends JSchException{
+class JSchAuthCancelException extends JSchException {
   //private static final long serialVersionUID=3204965907117900987L;
   String method;
-  JSchAuthCancelException () {
+
+  JSchAuthCancelException() {
     super();
   }
-  JSchAuthCancelException (String s) {
+
+  JSchAuthCancelException(String s) {
     super(s);
-    this.method=s;
+    this.method = s;
   }
-  public String getMethod(){
+
+  public String getMethod() {
     return method;
   }
 }

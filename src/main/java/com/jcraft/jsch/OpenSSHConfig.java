@@ -60,7 +60,7 @@ import java.util.Vector;
  *   <li>CompressionLevel</li>
  *   <li>ForwardAgent</li>
  *   <li>RequestTTY</li>
- *   <li>ServerAliveInterval</li>  
+ *   <li>ServerAliveInterval</li>
  *   <li>LocalForward</li>
  *   <li>RemoteForward</li>
  *   <li>ClearAllForwardings</li>
@@ -80,8 +80,7 @@ public class OpenSSHConfig implements ConfigRepository {
     Reader r = new StringReader(conf);
     try {
       return new OpenSSHConfig(r);
-    }
-    finally {
+    } finally {
       r.close();
     }
   }
@@ -96,8 +95,7 @@ public class OpenSSHConfig implements ConfigRepository {
     Reader r = new FileReader(Util.checkTilde(file));
     try {
       return new OpenSSHConfig(r);
-    }
-    finally {
+    } finally {
       r.close();
     }
   }
@@ -116,25 +114,24 @@ public class OpenSSHConfig implements ConfigRepository {
     Vector/*<String[]>*/ kv = new Vector();
     String l = null;
 
-    while((l = br.readLine()) != null){
+    while ((l = br.readLine()) != null) {
       l = l.trim();
-      if(l.length() == 0 || l.startsWith("#"))
+      if (l.length() == 0 || l.startsWith("#"))
         continue;
 
       String[] key_value = l.split("[= \t]", 2);
-      for(int i = 0; i < key_value.length; i++)
+      for (int i = 0; i < key_value.length; i++)
         key_value[i] = key_value[i].trim();
 
-      if(key_value.length <= 1)
+      if (key_value.length <= 1)
         continue;
 
-      if(key_value[0].equals("Host")){
+      if (key_value[0].equals("Host")) {
         config.put(host, kv);
         hosts.addElement(host);
         host = key_value[1];
         kv = new Vector();
-      }
-      else {
+      } else {
         kv.addElement(key_value);
       }
     }
@@ -147,6 +144,7 @@ public class OpenSSHConfig implements ConfigRepository {
   }
 
   private static final Hashtable keymap = new Hashtable();
+
   static {
     keymap.put("kex", "KexAlgorithms");
     keymap.put("server_host_key", "HostKeyAlgorithms");
@@ -165,29 +163,28 @@ public class OpenSSHConfig implements ConfigRepository {
     private String host;
     private Vector _configs = new Vector();
 
-    MyConfig(String host){
+    MyConfig(String host) {
       this.host = host;
 
       _configs.addElement(config.get(""));
 
       byte[] _host = Util.str2byte(host);
-      if(hosts.size() > 1){
-        for(int i = 1; i < hosts.size(); i++){
-          String patterns[] = ((String)hosts.elementAt(i)).split("[ \t]");
-          for(int j = 0; j < patterns.length; j++){
+      if (hosts.size() > 1) {
+        for (int i = 1; i < hosts.size(); i++) {
+          String patterns[] = ((String) hosts.elementAt(i)).split("[ \t]");
+          for (int j = 0; j < patterns.length; j++) {
             boolean negate = false;
             String foo = patterns[j].trim();
-            if(foo.startsWith("!")){
+            if (foo.startsWith("!")) {
               negate = true;
               foo = foo.substring(1).trim();
             }
-            if(Util.glob(Util.str2byte(foo), _host)){
-              if(!negate){
-                _configs.addElement(config.get((String)hosts.elementAt(i)));
+            if (Util.glob(Util.str2byte(foo), _host)) {
+              if (!negate) {
+                _configs.addElement(config.get((String) hosts.elementAt(i)));
               }
-            }
-            else if(negate){
-              _configs.addElement(config.get((String)hosts.elementAt(i)));
+            } else if (negate) {
+              _configs.addElement(config.get((String) hosts.elementAt(i)));
             }
           }
         }
@@ -195,21 +192,21 @@ public class OpenSSHConfig implements ConfigRepository {
     }
 
     private String find(String key) {
-      if(keymap.get(key)!=null) {
-        key = (String)keymap.get(key);
+      if (keymap.get(key) != null) {
+        key = (String) keymap.get(key);
       }
       key = key.toUpperCase();
       String value = null;
-      for(int i = 0; i < _configs.size(); i++) {
-        Vector v = (Vector)_configs.elementAt(i);
-        for(int j = 0; j < v.size(); j++) {
-          String[] kv = (String[])v.elementAt(j);
-          if(kv[0].toUpperCase().equals(key)) {
+      for (int i = 0; i < _configs.size(); i++) {
+        Vector v = (Vector) _configs.elementAt(i);
+        for (int j = 0; j < v.size(); j++) {
+          String[] kv = (String[]) v.elementAt(j);
+          if (kv[0].toUpperCase().equals(key)) {
             value = kv[1];
             break;
           }
         }
-        if(value != null)
+        if (value != null)
           break;
       }
       // TODO: The following change should be applied,
@@ -232,47 +229,56 @@ public class OpenSSHConfig implements ConfigRepository {
     private String[] multiFind(String key) {
       key = key.toUpperCase();
       Vector value = new Vector();
-      for(int i = 0; i < _configs.size(); i++) {
-        Vector v = (Vector)_configs.elementAt(i);
-        for(int j = 0; j < v.size(); j++) {
-          String[] kv = (String[])v.elementAt(j);
-          if(kv[0].toUpperCase().equals(key)) {
+      for (int i = 0; i < _configs.size(); i++) {
+        Vector v = (Vector) _configs.elementAt(i);
+        for (int j = 0; j < v.size(); j++) {
+          String[] kv = (String[]) v.elementAt(j);
+          if (kv[0].toUpperCase().equals(key)) {
             String foo = kv[1];
-            if(foo != null) {
+            if (foo != null) {
               value.remove(foo);
               value.addElement(foo);
             }
           }
         }
       }
-      String[] result = new String[value.size()]; 
+      String[] result = new String[value.size()];
       value.toArray(result);
       return result;
     }
 
-    public String getHostname(){ return find("Hostname"); }
-    public String getUser(){ return find("User"); }
-    public int getPort(){
+    public String getHostname() {
+      return find("Hostname");
+    }
+
+    public String getUser() {
+      return find("User");
+    }
+
+    public int getPort() {
       String foo = find("Port");
       int port = -1;
       try {
         port = Integer.parseInt(foo);
-      }
-      catch(NumberFormatException e){
+      } catch (NumberFormatException e) {
         // wrong format
       }
       return port;
     }
-    public String getValue(String key){
-      if(key.equals("compression.s2c") ||
-         key.equals("compression.c2s")) {
+
+    public String getValue(String key) {
+      if (key.equals("compression.s2c") ||
+          key.equals("compression.c2s")) {
         String foo = find(key);
-        if(foo == null || foo.equals("no"))
+        if (foo == null || foo.equals("no"))
           return "none,zlib@openssh.com,zlib";
         return "zlib@openssh.com,zlib,none";
       }
       return find(key);
     }
-    public String[] getValues(String key){ return multiFind(key); }
+
+    public String[] getValues(String key) {
+      return multiFind(key);
+    }
   }
 }
